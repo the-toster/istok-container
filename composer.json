@@ -1,0 +1,24 @@
+{
+    "name": "the-toster/container",
+    "description": "DI / IoC container",
+    "type": "library",
+    "require": {
+        "psr/container": "^2.0"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^4.22",
+        "phpunit/phpunit": "^9.5"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "TheToster\\Container\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "programmer",
+            "email": "internetov.ru@gmail.com"
+        }
+    ]
+}
