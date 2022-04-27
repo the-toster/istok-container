@@ -12,7 +12,7 @@ final class Container implements ContainerInterface
 
     public function get(string $id): mixed
     {
-        if (!$this->has($id) && !class_exists($id) && !interface_exists($id)) {
+        if (!$this->has($id) && !class_exists($id)) {
             throw new NotFound();
         }
 
@@ -30,28 +30,33 @@ final class Container implements ContainerInterface
         if ($entity instanceof \Closure) {
             return $this->call($entity);
         }
+
+        if (class_exists($entity)) {
+            return $this->construct($entity);
+        }
+    }
+
+    private function construct(string $className): object
+    {
+        $reflection = new \ReflectionClass($className);
+        $constructor = $reflection->getConstructor();
+
+        if (!$constructor->isPublic()) {
+            throw new NotResolvable();
+        }
+
+        $args = $this->resolveArguments($constructor->getParameters());
+
+        return new $className(...$args);
     }
 
     public function call(\Closure $closure): mixed
     {
         $reflection = new \ReflectionFunction($closure);
-        $arguments = [];
-        foreach ($reflection->getParameters() as $parameter) {
-            if ($parameter->isOptional()) {
-                $arguments[] = $parameter->getDefaultValue();
-                continue;
-            }
 
-            $type = $parameter->getType();
-            if ($type) {
-                $arguments[] = $this->resolveType($type);
-                continue;
-            }
+        $args = $this->resolveArguments($reflection->getParameters());
 
-            $arguments[] = $this->resolveByName($parameter->name);
-        }
-
-        return $closure(...$arguments);
+        return $closure(...$args);
     }
 
     public function has(string $id): bool
@@ -75,5 +80,27 @@ final class Container implements ContainerInterface
     private function resolveByName(string $name)
     {
         throw new \RuntimeException('unimplemented');
+    }
+
+    /** @param \ReflectionParameter[] $parameters */
+    private function resolveArguments(array $parameters): array
+    {
+        $arguments = [];
+        foreach ($parameters as $parameter) {
+            if ($parameter->isOptional()) {
+                $arguments[] = $parameter->getDefaultValue();
+                continue;
+            }
+
+            $type = $parameter->getType();
+            if ($type) {
+                $arguments[] = $this->resolveType($type);
+                continue;
+            }
+
+            $arguments[] = $this->resolveByName($parameter->name);
+        }
+
+        return $arguments;
     }
 }

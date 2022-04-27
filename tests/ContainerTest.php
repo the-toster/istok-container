@@ -30,4 +30,13 @@ final class ContainerTest extends TestCase
 
         $this->assertEquals('marker', $container->get('ABC'));
     }
+
+    /** @test */
+    public function it_can_give_concrete(): void
+    {
+        $container = new Container();
+        $r = $container->get(NotFound::class);
+
+        $this->assertEquals(new NotFound(), $r);
+    }
 }
