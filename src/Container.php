@@ -64,9 +64,9 @@ final class Container implements ContainerInterface
         $this->items[$id] = $def;
     }
 
-    public function setArgument(string $id, string $name, Closure $resolver): void
+    public function bindArgument(string $forId, string $paramName, Closure $resolver): void
     {
-        $this->params[$id][$name] = $resolver;
+        $this->params[$forId][$paramName] = $resolver;
     }
 
     private function resolve(mixed $entity): mixed
@@ -87,7 +87,7 @@ final class Container implements ContainerInterface
      * @param class-string<T> $className
      * @return T
      */
-    private function construct(string $className): object
+    public function construct(string $className): object
     {
         $reflection = new ReflectionClass($className);
         $constructor = $reflection->getConstructor();
@@ -107,12 +107,10 @@ final class Container implements ContainerInterface
     {
         $arguments = [];
         foreach ($parameters as $parameter) {
-            /** @psalm-suppress MixedAssignment */
-            [$resolved, $value] = $this->resolveByName($parameter->getName(), $forId);
-
-            if ($resolved) {
+            $resolver = $this->params[$forId][$parameter->getName()] ?? null;
+            if ($resolver) {
                 /** @psalm-suppress MixedAssignment */
-                $arguments[] = $value;
+                $arguments[] = $this->call($resolver);
                 continue;
             }
 
@@ -134,16 +132,4 @@ final class Container implements ContainerInterface
 
         return $arguments;
     }
-
-    /** @return array{0: bool, 1:mixed} */
-    private function resolveByName(string $name, ?string $id): array
-    {
-        $resolver = $this->params[$id][$name] ?? null;
-        if (!$resolver) {
-            return [false, null];
-        }
-
-        return [true, $this->call($resolver)];
-    }
-
 }
