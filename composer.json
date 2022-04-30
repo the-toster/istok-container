@@ -21,5 +21,8 @@
             "name": "programmer",
             "email": "internetov.ru@gmail.com"
         }
-    ]
+    ],
+    "provide": {
+        "psr/container-implementation": "^1.0"
+    }
 }
