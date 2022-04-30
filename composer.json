@@ -1,6 +1,6 @@
 {
-    "name": "the-toster/container",
-    "description": "DI / IoC container",
+    "name": "istok/container",
+    "description": "DI / IoC container with `call(\\Closure $fn): mixed` method",
     "type": "library",
     "require": {
         "php": "^8.1",
@@ -13,7 +13,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "TheToster\\Container\\": "src/"
+            "Istok\\Container\\": "src/"
         }
     },
     "authors": [

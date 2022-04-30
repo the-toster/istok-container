@@ -6,8 +6,8 @@ namespace Test;
 
 
 use PHPUnit\Framework\TestCase;
-use TheToster\Container\Container;
-use TheToster\Container\NotFound;
+use Istok\Container\Container;
+use Istok\Container\NotFound;
 
 final class ContainerTest extends TestCase
 {

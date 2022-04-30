@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TheToster\Container;
+namespace Istok\Container;
 
 
 use Psr\Container\NotFoundExceptionInterface;

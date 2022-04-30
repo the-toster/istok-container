@@ -2,25 +2,15 @@
 
 declare(strict_types=1);
 
-namespace TheToster\Container;
+namespace Istok\Container;
 
 use Closure;
 use Psr\Container\ContainerInterface;
-
 use ReflectionClass;
 use ReflectionFunction;
-use ReflectionIntersectionType;
-
 use ReflectionNamedType;
 use ReflectionParameter;
-use ReflectionType;
-use ReflectionUnionType;
-
-use RuntimeException;
-
 use Throwable;
-
-use function Reflection;
 
 final class Container implements ContainerInterface
 {
