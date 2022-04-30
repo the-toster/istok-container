@@ -64,6 +64,11 @@ final class Container implements ContainerInterface
         $this->items[$id] = $def;
     }
 
+    public function setArgument(string $id, string $name, Closure $resolver): void
+    {
+        $this->params[$id][$name] = $resolver;
+    }
+
     private function resolve(mixed $entity): mixed
     {
         if ($entity instanceof Closure) {
