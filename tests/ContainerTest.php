@@ -44,7 +44,7 @@ final class ContainerTest extends TestCase
     public function it_can_use_suggested_params(): void
     {
         $container = new Container();
-        $container->bindArgument(NotFound::class, 'message', fn() => 'marker');
+        $container->bindArgument('message', NotFound::class, fn() => 'marker');
 
         $this->assertEquals(new NotFound('marker'), $container->get(NotFound::class));
     }

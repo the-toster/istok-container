@@ -64,9 +64,9 @@ final class Container implements ContainerInterface
         $this->items[$id] = $def;
     }
 
-    public function bindArgument(string $forId, string $paramName, Closure $resolver): void
+    public function bindArgument(string $name, string $for, Closure $resolver): void
     {
-        $this->params[$forId][$paramName] = $resolver;
+        $this->params[$for][$name] = $resolver;
     }
 
     private function resolve(mixed $entity): mixed
