@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Istok\Container;
 
 use Closure;
+use Istok\Container\ModelResolving\ModelResolver;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionFunction;
@@ -35,13 +36,35 @@ final class Container implements ContainerInterface
         }
     }
 
-    public function call(Closure $closure): mixed
+    /** @param array<string,mixed> $arguments */
+    public function call(Closure $closure, array $arguments = [], ?ModelResolver $resolver = null): mixed
     {
         $reflection = new ReflectionFunction($closure);
 
-        $args = $this->resolveArguments($reflection->getParameters(), null);
+        $givenArguments = [];
+        $params = [];
 
-        return $closure(...$args);
+        foreach ($reflection->getParameters() as $parameter) {
+            $name = $parameter->getName();
+            if (array_key_exists($name, $arguments)) {
+                $givenArguments[$name] = $arguments[$name];
+                continue;
+            }
+
+            if ($resolver &&
+                ($type = $parameter->getType()) instanceof ReflectionNamedType &&
+                $resolver->match($type)
+            ) {
+                $givenArguments[$name] = $resolver->resolve($type);
+                continue;
+            }
+
+            $params[] = $parameter;
+        }
+
+        $resolvedArguments = $this->resolveArguments($params, null);
+
+        return $closure(...$givenArguments, ...$resolvedArguments);
     }
 
     public function has(string $id): bool
