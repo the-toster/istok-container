@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Test\ConstructorResolver;
+namespace Test\ModelResolver;
 
 
 use Istok\Container\ModelResolving\ConstructorResolver;
 use PHPUnit\Framework\TestCase;
-use Test\ConstructorResolver\TestObject\Item;
 use Test\ConstructorResolver\TestObject\ItemList;
-use Test\ConstructorResolver\TestObject\Rich;
-use Test\ConstructorResolver\TestObject\Untyped;
+use Test\ModelResolver\TestObject\BackedEnum;
+use Test\ModelResolver\TestObject\Item;
+use Test\ModelResolver\TestObject\PureEnum;
+use Test\ModelResolver\TestObject\Rich;
+use Test\ModelResolver\TestObject\TestEnum;
+use Test\ModelResolver\TestObject\Untyped;
 
 final class ConstructorResolverTest extends TestCase
 {
@@ -58,6 +61,20 @@ final class ConstructorResolverTest extends TestCase
 
 
         $this->assertEquals($expected, $r);
+    }
+
+    /** @test */
+    public function it_can_resolve_enum_params(): void
+    {
+        $expected = new TestEnum(BackedEnum::a, PureEnum::b);
+        $r = (new ConstructorResolver())->resolve(new \ReflectionClass(TestEnum::class), ['backed' => 1, 'pure' => 'b']
+        );
+        $this->assertEquals($expected, $r);
+        $r2 = (new ConstructorResolver())->resolve(
+            new \ReflectionClass(TestEnum::class),
+            ['backed' => 'a', 'pure' => 'b']
+        );
+        $this->assertEquals($expected, $r2);
     }
 
 }

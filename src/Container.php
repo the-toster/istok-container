@@ -53,9 +53,9 @@ final class Container implements ContainerInterface
 
             if ($resolver &&
                 ($type = $parameter->getType()) instanceof ReflectionNamedType &&
-                $resolver->match($type)
+                $resolver->match($type->getName())
             ) {
-                $givenArguments[$name] = $resolver->resolve($type);
+                $givenArguments[$name] = $resolver->resolve($type->getName());
                 continue;
             }
 

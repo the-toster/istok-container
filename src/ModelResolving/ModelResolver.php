@@ -8,7 +8,7 @@ use ReflectionNamedType;
 
 interface ModelResolver
 {
-    public function match(ReflectionNamedType $type): bool;
+    public function match(string $type): bool;
 
-    public function resolve(ReflectionNamedType $type): mixed;
+    public function resolve(string $type): mixed;
 }

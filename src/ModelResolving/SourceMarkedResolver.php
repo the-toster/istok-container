@@ -7,7 +7,7 @@ namespace Istok\Container\ModelResolving;
 
 use ReflectionNamedType;
 
-final class ResolvingSourceAttribute implements ModelResolver
+final class SourceMarkedResolver implements ModelResolver
 {
     public function __construct(
         private readonly string $sourceName,
@@ -15,10 +15,9 @@ final class ResolvingSourceAttribute implements ModelResolver
     ) {
     }
 
-    private function findTargetSource(ReflectionNamedType $type): ?string
+    private function findTargetSource(string $name): ?string
     {
-        $name = $type->getName();
-        if(!class_exists($name)) {
+        if (!class_exists($name)) {
             return null;
         }
         $attributes = (new \ReflectionClass($name))->getAttributes(Source::class);
@@ -31,14 +30,15 @@ final class ResolvingSourceAttribute implements ModelResolver
         return null;
     }
 
-    public function match(ReflectionNamedType $type): bool
+    public function match(string $type): bool
     {
         return $this->findTargetSource($type) === $this->sourceName;
     }
 
-    public function resolve(ReflectionNamedType $type): mixed
+    public function resolve(string $type): mixed
     {
-
+        $class = new \ReflectionClass($type);
+        return (new ConstructorResolver())->resolve($class, $this->data);
     }
 
 

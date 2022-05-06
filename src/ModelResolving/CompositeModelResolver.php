@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Istok\Container\ModelResolving;
 
 
-use ReflectionNamedType;
+use Istok\Container\NotResolvable;
 
 final class CompositeModelResolver implements ModelResolver
 {
@@ -16,7 +16,7 @@ final class CompositeModelResolver implements ModelResolver
         $this->resolvers = $resolvers;
     }
 
-    private function find(ReflectionNamedType $type): ?ModelResolver
+    private function find(string $type): ?ModelResolver
     {
         foreach ($this->resolvers as $resolver) {
             if ($resolver->match($type)) {
@@ -27,12 +27,12 @@ final class CompositeModelResolver implements ModelResolver
         return null;
     }
 
-    public function match(ReflectionNamedType $type): bool
+    public function match(string $type): bool
     {
         return !is_null($this->find($type));
     }
 
-    public function resolve(ReflectionNamedType $type): mixed
+    public function resolve(string $type): mixed
     {
         $resolver = $this->find($type);
         if (!$resolver) {
