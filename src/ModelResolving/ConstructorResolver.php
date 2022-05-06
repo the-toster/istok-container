@@ -9,56 +9,62 @@ use Istok\Container\NotResolvable;
 
 final class ConstructorResolver
 {
-    public function resolve(\ReflectionClass $class, array $arguments): object
+    public function resolve(\ReflectionClass $class, array $input): object
     {
         $params = $class->getConstructor()->getParameters();
         $args = [];
+        $variadic = [];
         foreach ($params as $parameter) {
-            $args[$parameter->getName()] = $this->resolveParameter($parameter, $arguments);
+            $name = $parameter->getName();
+
+            if (!array_key_exists($name, $input)) {
+                $args[$name] = null;
+                continue;
+            }
+
+            if($parameter->isVariadic()) {
+                foreach ($input[$name] as $inputItem) {
+                    $variadic[] = $this->resolveParameter($parameter, $inputItem);
+                }
+            } else {
+                $args[$name] = $this->resolveParameter($parameter, $input[$name]);
+            }
+
         }
+        return new $class->name(...$args, ...$variadic);
     }
 
-    private function resolveParameter(\ReflectionParameter $parameter, array $arguments): mixed
+    private function resolveParameter(\ReflectionParameter $parameter, mixed $input): mixed
     {
-        $name = $parameter->getName();
-
-        if (!array_key_exists($name, $arguments)) {
-            return null;
-        }
-
         $type = $parameter->getType();
+
         if (is_null($type)) {
-            return $arguments[$name];
+            return $input;
         }
 
         if (!($type instanceof \ReflectionNamedType)) {
             throw new NotResolvable('Intersection and union types are not supported');
         }
 
-        if ($parameter->isVariadic()) {
-            return $this->handleArray($type, $arguments[$name]);
-        }
-
-        if (!$type->isBuiltin()) {
-            return $this->coerce($type, $arguments[$name]);
-        }
-
-        return $this->tryResolveRecursive($type->getName(), $arguments[$name]);
+        return $this->resolveNamedType($type, $input);
     }
 
-
-    private function tryResolveRecursive(string $typeName, mixed $arguments): mixed
+    private function resolveNamedType(\ReflectionNamedType $type, mixed $argument): mixed
     {
-        if (enum_exists($typeName)) {
-            return $this->resolveEnum($typeName, $arguments);
+        if ($type->isBuiltin()) {
+            return $this->coerce($type, $argument);
         }
 
-        if (!class_exists($typeName)) {
-            throw new NotResolvable('Non-class type not supported');
+        $name = $type->getName();
+        if (enum_exists($name)) {
+            return $this->resolveEnum($name, $argument);
         }
 
+        if (class_exists($name)) {
+            return $this->resolve(new \ReflectionClass($name), $argument);
+        }
 
-        return $this->resolve(new \ReflectionClass($typeName), $arguments);
+        throw new NotResolvable('Given type not supported: ' . $name);
     }
 
     private function coerce(\ReflectionNamedType $to, mixed $v): mixed
@@ -99,13 +105,4 @@ final class ConstructorResolver
         throw new NotResolvable("Enum doesn't contain such case");
     }
 
-    private function handleArray(\ReflectionNamedType $type, array $values): array
-    {
-        $r = [];
-        foreach ($values as $v) {
-            $r = $this->tryResolveRecursive($type->getName(), $v);
-        }
-
-        return $r;
-    }
 }
