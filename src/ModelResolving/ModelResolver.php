@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Istok\Container\ModelResolving;
 
-use ReflectionNamedType;
 
-interface ModelResolver
+final class ModelResolver implements Resolver
 {
-    public function match(string $type): bool;
+    public function __construct(
+        private readonly array $data
+    ) {
+    }
 
-    public function resolve(string $type): mixed;
+    public function resolve(string $type, array $arguments = []): mixed
+    {
+        $class = new \ReflectionClass($type);
+        return (new Constructor())->resolve($class, $this->data);
+    }
+
+
 }

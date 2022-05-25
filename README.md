@@ -1,6 +1,7 @@
 # DI container
 
 - implements PSR-11
+- allow custom resolving by attributes (useful to fill DTO)
 - contain handy `Container::call(\Closure $fn): mixed` method
 - allow param-name binding: `Container::bindArgument(string $name, string $for, \Closure $resolver)`
 
@@ -20,7 +21,7 @@ While `Services` depends on both other `Services` and `Models`, `Models` depends
 One of reasons why I want to create this container was the desire to be able to get well-typed DTOs filled from user input, or
 config, as arguments.  
   
-To achieve this, I added `ModelResolver` interface, and receive it as argument for `call` method.  
+To achieve this, I added `ModelResolver` interface, which implementation can be used as attribute of `Model`.  
 This allows to add contextual configuration for resolving this type of objects.
 
 So, `Container` itself is mostly for resolving `Services`, and `ModelResolver` used for resolving `Models`, like request `DTOs`.

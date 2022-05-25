@@ -34,7 +34,6 @@ final class CallTest extends TestCase
                 'e2' => $notResolvable
             ],
             ['a' => 'a'],
-            new StaticResolver(NotFound::class, new NotFound('marker'))
         );
 
         $this->assertEquals(['a' => 'a', 'b' => 'b', 'e1' => new NotFound('marker'), 'e2' => new NotResolvable()], $r);

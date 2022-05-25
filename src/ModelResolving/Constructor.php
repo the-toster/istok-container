@@ -7,7 +7,7 @@ namespace Istok\Container\ModelResolving;
 
 use Istok\Container\NotResolvable;
 
-final class ConstructorResolver
+final class Constructor
 {
     public function resolve(\ReflectionClass $class, array $input): object
     {

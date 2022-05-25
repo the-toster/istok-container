@@ -5,21 +5,28 @@ declare(strict_types=1);
 namespace Istok\Container;
 
 use Closure;
-use Istok\Container\ModelResolving\ModelResolver;
+use Istok\Container\ModelResolving\Resolver;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
 use Throwable;
+use Istok\Container\ContainerInterface as IstokContainer;
 
-final class Container implements ContainerInterface
+final class Container implements ContainerInterface, IstokContainer
 {
     /** @var array<string,Closure|string> */
     private array $items = [];
 
     /** @var array<string,array<string,Closure>> */
     private array $params = [];
+
+
+    public function has(string $id): bool
+    {
+        return isset($this->items[$id]);
+    }
 
     public function get(string $id): mixed
     {
@@ -29,20 +36,64 @@ final class Container implements ContainerInterface
 
         $entity = $this->items[$id] ?? $id;
 
-        try {
-            return $this->resolve($entity);
-        } catch (Throwable $e) {
-            throw new NotResolvable($id, 0, $e);
+        if ($entity instanceof Closure) {
+            return $this->call($entity);
         }
+
+        if (is_string($entity) && class_exists($entity)) {
+            return $this->build($entity);
+        }
+
+        throw new NotResolvable($id);
+    }
+
+    private function build(string $id): mixed
+    {
+        $reflection = new ReflectionClass($id);
+
+        foreach($reflection->getAttributes(Resolver::class, \ReflectionAttribute::IS_INSTANCEOF) as $resolverAttribute) {
+            $resolverName = $resolverAttribute->getName();
+            if($this->has($resolverName)) {
+                /** @var Resolver $resolver */
+                $resolver = $this->get($resolverName);
+                return $resolver->resolve($id, $resolverAttribute->getArguments());
+
+            }
+        }
+
+        $constructor = $reflection->getConstructor();
+        if ($constructor && !$constructor->isPublic()) {
+            throw new NotResolvable();
+        }
+
+        $args = $this->resolveArguments($constructor?->getParameters() ?? [], $id);
+
+        /** @psalm-suppress MixedMethodCall */
+        return new $id(...$args);
+    }
+
+    /**
+     * @template T
+     * @param class-string<T> $id
+     * @return T
+     */
+    public function make(string $id): object
+    {
+        $instance = $this->build($id);
+        if ($instance instanceof $id) {
+            throw new NotResolvable('Resolved object not an instance of requested class');
+        }
+
+        return $instance;
     }
 
     /** @param array<string,mixed> $arguments */
-    public function call(Closure $closure, array $arguments = [], ?ModelResolver $resolver = null): mixed
+    public function call(Closure $closure, array $arguments = []): mixed
     {
         $reflection = new ReflectionFunction($closure);
 
         $givenArguments = [];
-        $params = [];
+        $toResolve = [];
 
         foreach ($reflection->getParameters() as $parameter) {
             $name = $parameter->getName();
@@ -51,68 +102,10 @@ final class Container implements ContainerInterface
                 continue;
             }
 
-            if ($resolver &&
-                ($type = $parameter->getType()) instanceof ReflectionNamedType &&
-                $resolver->match($type->getName())
-            ) {
-                $givenArguments[$name] = $resolver->resolve($type->getName());
-                continue;
-            }
-
-            $params[] = $parameter;
+            $toResolve[] = $parameter;
         }
 
-        $resolvedArguments = $this->resolveArguments($params, null);
-
-        return $closure(...$givenArguments, ...$resolvedArguments);
-    }
-
-    public function has(string $id): bool
-    {
-        return isset($this->items[$id]);
-    }
-
-    public function set(string $id, Closure|string $def): void
-    {
-        $this->items[$id] = $def;
-    }
-
-    public function bindArgument(string $name, string $for, Closure $resolver): void
-    {
-        $this->params[$for][$name] = $resolver;
-    }
-
-    private function resolve(mixed $entity): mixed
-    {
-        if ($entity instanceof Closure) {
-            return $this->call($entity);
-        }
-
-        if (is_string($entity) && class_exists($entity)) {
-            return $this->construct($entity);
-        }
-
-        throw new NotResolvable();
-    }
-
-    /**
-     * @template T
-     * @param class-string<T> $className
-     * @return T
-     */
-    public function construct(string $className): object
-    {
-        $reflection = new ReflectionClass($className);
-        $constructor = $reflection->getConstructor();
-
-        if ($constructor && !$constructor->isPublic()) {
-            throw new NotResolvable();
-        }
-
-        $args = $this->resolveArguments($constructor?->getParameters() ?? [], $className);
-
-        /** @psalm-suppress MixedMethodCall */
-        return new $className(...$args);
+        return $closure(...$givenArguments, ...$this->resolveArguments($toResolve, null));
     }
 
     /** @param ReflectionParameter[] $parameters */
@@ -144,5 +137,15 @@ final class Container implements ContainerInterface
         }
 
         return $arguments;
+    }
+
+    public function set(string $id, Closure|string $def): void
+    {
+        $this->items[$id] = $def;
+    }
+
+    public function bindArgument(string $name, string $for, Closure $resolver): void
+    {
+        $this->params[$for][$name] = $resolver;
     }
 }

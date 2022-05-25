@@ -5,23 +5,22 @@ declare(strict_types=1);
 namespace Test\ModelResolver;
 
 
-use Istok\Container\ModelResolving\ConstructorResolver;
+use Istok\Container\ModelResolving\Constructor;
 use PHPUnit\Framework\TestCase;
-use Test\ConstructorResolver\TestObject\ItemList;
-use Test\ModelResolver\TestObject\BackedEnum;
-use Test\ModelResolver\TestObject\Item;
-use Test\ModelResolver\TestObject\PureEnum;
-use Test\ModelResolver\TestObject\Rich;
-use Test\ModelResolver\TestObject\TestEnum;
-use Test\ModelResolver\TestObject\Untyped;
+use Test\ModelResolver\Fixture\BackedEnum;
+use Test\ModelResolver\Fixture\Item;
+use Test\ModelResolver\Fixture\PureEnum;
+use Test\ModelResolver\Fixture\Rich;
+use Test\ModelResolver\Fixture\TestEnum;
+use Test\ModelResolver\Fixture\Untyped;
 
-final class ConstructorResolverTest extends TestCase
+final class ConstructorTest extends TestCase
 {
     /** @test */
     public function it_can_build_simple(): void
     {
         $data = ['id' => 'id1', 'title' => 'title1'];
-        $r = (new ConstructorResolver())->resolve(new \ReflectionClass(Item::class), $data);
+        $r = (new Constructor())->resolve(new \ReflectionClass(Item::class), $data);
         $this->assertEquals(new Item('id1', 'title1'), $r);
     }
 
@@ -29,7 +28,7 @@ final class ConstructorResolverTest extends TestCase
     public function it_can_build_untyped(): void
     {
         $data = ['a' => 'ab', 'b' => 'bc'];
-        $r = (new ConstructorResolver())->resolve(new \ReflectionClass(Untyped::class), $data);
+        $r = (new Constructor())->resolve(new \ReflectionClass(Untyped::class), $data);
         $this->assertEquals(new Untyped('ab', 'bc'), $r);
     }
 
@@ -49,7 +48,7 @@ final class ConstructorResolverTest extends TestCase
                 ['id' => 'multiple3', 'title' => 'm3'],
             ]
         ];
-        $r = (new ConstructorResolver())->resolve(new \ReflectionClass(Rich::class), $data);
+        $r = (new Constructor())->resolve(new \ReflectionClass(Rich::class), $data);
 
         $expected = new Rich(
             'id1', 10, true, [1, 2, 3], [4, 5, 6],
@@ -67,10 +66,10 @@ final class ConstructorResolverTest extends TestCase
     public function it_can_resolve_enum_params(): void
     {
         $expected = new TestEnum(BackedEnum::a, PureEnum::b);
-        $r = (new ConstructorResolver())->resolve(new \ReflectionClass(TestEnum::class), ['backed' => 1, 'pure' => 'b']
+        $r = (new Constructor())->resolve(new \ReflectionClass(TestEnum::class), ['backed' => 1, 'pure' => 'b']
         );
         $this->assertEquals($expected, $r);
-        $r2 = (new ConstructorResolver())->resolve(
+        $r2 = (new Constructor())->resolve(
             new \ReflectionClass(TestEnum::class),
             ['backed' => 'a', 'pure' => 'b']
         );
