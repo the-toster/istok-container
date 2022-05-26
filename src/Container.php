@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Istok\Container;
 
 use Closure;
-use Istok\Container\ModelResolving\Resolver;
+use Istok\Container\ContainerInterface as IstokContainer;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
-use Throwable;
-use Istok\Container\ContainerInterface as IstokContainer;
 
 final class Container implements ContainerInterface, IstokContainer
 {
@@ -77,7 +75,7 @@ final class Container implements ContainerInterface, IstokContainer
      * @param class-string<T> $id
      * @return T
      */
-    public function make(string $id): object
+    public function construct(string $id): object
     {
         $instance = $this->build($id);
         if ($instance instanceof $id) {

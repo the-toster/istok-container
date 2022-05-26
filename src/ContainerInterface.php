@@ -20,7 +20,7 @@ interface ContainerInterface
      * @param class-string<T> $id
      * @return T
      */
-    public function make(string $id): object;
+    public function construct(string $id): object;
 
     /**
      * Call any closure, use container to resolve arguments

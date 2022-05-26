@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Istok\Container\ModelResolving;
+namespace Istok\Container;
 
 interface Resolver
 {

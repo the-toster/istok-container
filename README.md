@@ -1,9 +1,57 @@
 # DI container
 
-- implements PSR-11
-- allow custom resolving by attributes (useful to fill DTO)
+```shell
+composer require istok/container
+```
+
 - contain handy `Container::call(\Closure $fn): mixed` method
+- allow custom resolving by attributes (useful to fill DTO)
 - allow param-name binding: `Container::bindArgument(string $name, string $for, \Closure $resolver)`
+- implements PSR-11
+
+## Registration methods
+```php
+// Registration of cachable entry
+Container::singletone(string $id, string|\Closure $defitition);
+// This entry will not be cached
+Container::register(string $id, string|\Closure $defitition);
+
+// parameter $name of $for::__construct() will be resolved by given closure 
+Container::bindArgument(string $name, string $for, \Closure $resolver);
+```
+## Retrieving
+```php
+// take instance
+Container::get(string $id);
+
+/**
+ * Call $fn with given arguments, using Container::get() for rest
+ * @param array<string, mixed> $args
+ */
+Container::call(\Closure $fn, $args);
+
+/**
+ * Psalm-friendly version, contains actual type check, result should be typeof T
+ * @template T
+ * @param class-string<T> $id
+ * @return T
+ */
+Container::construct(string $id): object;
+
+```
+
+## Resolution order
+- check direct registration
+- check attributes, use if any suited
+- try to construct
+
+## Closure arguments resolution
+- apply explicitly provided arguments
+- use `Container::get()` to resolve rest
+
+## Resolving by attributes
+If target class has attribute that implements `Istok\Container\Resolver` interface, instance of attribute will be constructed (by `Container::get`, not `ReflectionAttribute::newInstance()`), and then result of `Resolver::resolve($targetName, ...$attributeArgs)` will be returned as result.
+
 
 ## Service and Model resolving
 
@@ -21,7 +69,8 @@ While `Services` depends on both other `Services` and `Models`, `Models` depends
 One of reasons why I want to create this container was the desire to be able to get well-typed DTOs filled from user input, or
 config, as arguments.  
   
-To achieve this, I added `ModelResolver` interface, which implementation can be used as attribute of `Model`.  
+To achieve this, I added `Resolver` interface, which implementation can be used as attribute of `Model`.  
 This allows to add contextual configuration for resolving this type of objects.
 
 So, `Container` itself is mostly for resolving `Services`, and `ModelResolver` used for resolving `Models`, like request `DTOs`.
+
