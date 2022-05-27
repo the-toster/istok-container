@@ -34,10 +34,11 @@ interface ContainerInterface
     // configuration methods
 
 
-    public function set(string $id, string|\Closure $def): void;
+    public function singleton(string $id, string|\Closure $def): void;
+    public function register(string $id, string|\Closure $def): void;
 
     /**
      * Give argument
      */
-    public function bindArgument(string $name, string $for, \Closure $resolver): void;
+    public function argument(string $name, string $for, \Closure $resolver): void;
 }

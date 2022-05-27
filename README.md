@@ -9,7 +9,7 @@ composer require istok/container
 - allow param-name binding: `Container::bindArgument(string $name, string $for, \Closure $resolver)`
 - implements PSR-11
 
-## Registration methods
+## Registration
 ```php
 // Registration of cachable entry
 Container::singletone(string $id, string|\Closure $defitition);
@@ -73,4 +73,3 @@ To achieve this, I added `Resolver` interface, which implementation can be used 
 This allows to add contextual configuration for resolving this type of objects.
 
 So, `Container` itself is mostly for resolving `Services`, and `ModelResolver` used for resolving `Models`, like request `DTOs`.
-

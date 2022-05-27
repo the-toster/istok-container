@@ -15,7 +15,7 @@ final class ContainerTest extends TestCase
     public function it_can_set_and_get(): void
     {
         $container = new Container();
-        $container->set('ABC', fn() => 'wer');
+        $container->singleton('ABC', fn() => 'wer');
 
         $this->assertTrue($container->has('ABC'));
         $this->assertEquals('wer', $container->get('ABC'));
@@ -25,8 +25,8 @@ final class ContainerTest extends TestCase
     public function it_can_resolve_params(): void
     {
         $container = new Container();
-        $container->set('ABC', fn(NotFound $example) => $example->getMessage());
-        $container->set(NotFound::class, fn() => new NotFound('marker'));
+        $container->singleton('ABC', fn(NotFound $example) => $example->getMessage());
+        $container->singleton(NotFound::class, fn() => new NotFound('marker'));
 
         $this->assertEquals('marker', $container->get('ABC'));
     }
@@ -44,7 +44,7 @@ final class ContainerTest extends TestCase
     public function it_can_use_suggested_params(): void
     {
         $container = new Container();
-        $container->bindArgument('message', NotFound::class, fn() => 'marker');
+        $container->argument('message', NotFound::class, fn() => 'marker');
 
         $this->assertEquals(new NotFound('marker'), $container->get(NotFound::class));
     }

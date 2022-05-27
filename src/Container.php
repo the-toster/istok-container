@@ -20,6 +20,13 @@ final class Container implements ContainerInterface, IstokContainer
     /** @var array<string,array<string,Closure>> */
     private array $params = [];
 
+    private Cache $cache;
+
+    public function __construct()
+    {
+        $this->cache = new Cache();
+    }
+
 
     public function has(string $id): bool
     {
@@ -32,14 +39,22 @@ final class Container implements ContainerInterface, IstokContainer
             throw new NotFound();
         }
 
+        if ($this->cache->has($id)) {
+            return $this->cache->get($id);
+        }
+
         $entity = $this->items[$id] ?? $id;
 
         if ($entity instanceof Closure) {
-            return $this->call($entity);
+            $r = $this->call($entity);
+            $this->cache->newVal($id, $r);
+            return $r;
         }
 
         if (is_string($entity) && class_exists($entity)) {
-            return $this->build($entity);
+            $r = $this->build($entity);
+            $this->cache->newVal($id, $r);
+            return $r;
         }
 
         throw new NotResolvable($id);
@@ -49,13 +64,17 @@ final class Container implements ContainerInterface, IstokContainer
     {
         $reflection = new ReflectionClass($id);
 
-        foreach($reflection->getAttributes(Resolver::class, \ReflectionAttribute::IS_INSTANCEOF) as $resolverAttribute) {
+        foreach (
+            $reflection->getAttributes(
+                Resolver::class,
+                \ReflectionAttribute::IS_INSTANCEOF
+            ) as $resolverAttribute
+        ) {
             $resolverName = $resolverAttribute->getName();
-            if($this->has($resolverName)) {
+            if ($this->has($resolverName)) {
                 /** @var Resolver $resolver */
                 $resolver = $this->get($resolverName);
                 return $resolver->resolve($id, $resolverAttribute->getArguments());
-
             }
         }
 
@@ -77,7 +96,7 @@ final class Container implements ContainerInterface, IstokContainer
      */
     public function construct(string $id): object
     {
-        $instance = $this->build($id);
+        $instance = $this->get($id);
         if ($instance instanceof $id) {
             throw new NotResolvable('Resolved object not an instance of requested class');
         }
@@ -137,13 +156,22 @@ final class Container implements ContainerInterface, IstokContainer
         return $arguments;
     }
 
-    public function set(string $id, Closure|string $def): void
+    public function singleton(string $id, Closure|string $def): void
     {
+        $this->register($id, $def);
+        $this->cache->shouldCache($id);
+    }
+
+    public function register(string $id, \Closure|string $def): void
+    {
+        $this->cache->shouldNotCache($id);
+        $this->cache->reset($id);
         $this->items[$id] = $def;
     }
 
-    public function bindArgument(string $name, string $for, Closure $resolver): void
+    public function argument(string $name, string $for, Closure $resolver): void
     {
         $this->params[$for][$name] = $resolver;
     }
+
 }
