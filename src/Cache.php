@@ -19,7 +19,7 @@ final class Cache
         unset($this->cache[$id]);
     }
 
-    public function newVal(string $id, mixed $val): void
+    public function cacheIfShould(string $id, mixed $val): void
     {
         if ($this->shouldCache[$id] ?? false) {
             $this->cache[$id] = $val;
@@ -36,9 +36,12 @@ final class Cache
         unset($this->shouldCache[$id]);
     }
 
-    public function get(string $id): array
+    public function get(string $id): mixed
     {
-        return $this->cache[$id] ?? throw new \OutOfRangeException('no such entry');
+        if (!$this->has($id)) {
+            throw new \OutOfRangeException('no such entry');
+        }
+        return $this->cache[$id];
     }
 
     public function has(string $id): bool
