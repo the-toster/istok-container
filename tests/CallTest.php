@@ -9,7 +9,7 @@ use Istok\Container\Container;
 use PHPUnit\Framework\TestCase;
 use Test\Fixtures\ClassA;
 use Test\Fixtures\ClassB;
-use Test\Fixtures\RequestDTO;
+use Test\Fixtures\WithAttribute;
 use Test\Fixtures\TestResolver;
 
 final class CallTest extends TestCase
@@ -38,8 +38,8 @@ final class CallTest extends TestCase
 
         $container->singleton(TestResolver::class, fn() => new TestResolver(['marker' => 'test']));
 
-        $r = $container->call(fn(RequestDTO $dto) => $dto);
+        $r = $container->call(fn(WithAttribute $dto) => $dto);
 
-        $this->assertEquals(new RequestDTO('test'), $r);
+        $this->assertEquals(new WithAttribute('test'), $r);
     }
 }

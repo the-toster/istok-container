@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Test\Fixtures;
 
 #[TestResolver]
-final class RequestDTO
+final class WithAttribute
 {
     public function __construct(
         public readonly string $marker
