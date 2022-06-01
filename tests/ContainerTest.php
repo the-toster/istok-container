@@ -12,6 +12,31 @@ use PHPUnit\Framework\TestCase;
 final class ContainerTest extends TestCase
 {
     /** @test */
+    public function it_can_give_non_shared_instances(): void
+    {
+        $container = new Container();
+        $id = 'id';
+        $container->register($id, fn() => new \stdClass());
+        $i1 = $container->make($id);
+        $i2 = $container->make($id);
+        $this->assertEquals($i1, $i2); // they are equals
+        $this->assertFalse($i1 === $i2); // but not the same
+    }
+
+    /** @test */
+    public function it_can_give_shared_instances(): void
+    {
+        $container = new Container();
+        $id = 'id';
+        $container->singleton($id, fn() => new \stdClass());
+        $i1 = $container->make($id);
+        $i2 = $container->make($id);
+        $this->assertTrue($i1 === $i2); // they are the same thing
+        // as illustration
+        $this->assertFalse((new \stdClass()) === (new \stdClass()));
+    }
+
+    /** @test */
     public function it_can_set_and_get(): void
     {
         $container = new Container();
