@@ -9,19 +9,58 @@ use Istok\Container\ModelResolving\Constructor;
 use PHPUnit\Framework\TestCase;
 use Test\ModelResolver\Fixture\BackedEnum;
 use Test\ModelResolver\Fixture\Item;
+use Test\ModelResolver\Fixture\WithArray;
+use Test\ModelResolver\Fixture\WithScalars;
 use Test\ModelResolver\Fixture\PureEnum;
-use Test\ModelResolver\Fixture\Rich;
-use Test\ModelResolver\Fixture\TestEnum;
+use Test\ModelResolver\Fixture\WithEnums;
 use Test\ModelResolver\Fixture\Untyped;
+use Test\ModelResolver\Fixture\WithVariadic;
 
 final class ConstructorTest extends TestCase
 {
     /** @test */
-    public function it_can_build_simple(): void
+    public function it_can_build_scalar(): void
     {
-        $data = ['id' => 'id1', 'title' => 'title1'];
-        $r = (new Constructor())->resolve(new \ReflectionClass(Item::class), $data);
-        $this->assertEquals(new Item('id1', 'title1'), $r);
+        $data = ['id' => 1, 'title' => 'title1', 'val' => 3.3, 'flag' => true];
+        $r = (new Constructor())->resolve(new \ReflectionClass(WithScalars::class), $data);
+        $this->assertEquals(new WithScalars(1, 'title1', 3.3, true), $r);
+    }
+
+    /** @test */
+    public function it_can_build_with_arrays(): void
+    {
+        $data = ['a1' => [1, 2, 3], 'a2' => [4, 5, 'test']];
+        $r = (new Constructor())->resolve(new \ReflectionClass(WithArray::class), $data);
+        $this->assertEquals(new WithArray($data['a1'], $data['a2']), $r);
+    }
+
+    /** @test */
+    public function it_can_build_variadic(): void
+    {
+        $data = [
+            'a' => 'abc',
+            'items' => [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+            ]
+        ];
+        $r = (new Constructor())->resolve(new \ReflectionClass(WithVariadic::class), $data);
+        $this->assertEquals(new WithVariadic('abc', new Item(1), new Item(2), new Item(3)), $r);
+    }
+
+    /** @test */
+    public function it_can_resolve_enum_params(): void
+    {
+        $expected = new WithEnums(BackedEnum::a, PureEnum::b);
+        $r = (new Constructor())->resolve(new \ReflectionClass(WithEnums::class), ['backed' => 1, 'pure' => 'b']
+        );
+        $this->assertEquals($expected, $r);
+        $r2 = (new Constructor())->resolve(
+            new \ReflectionClass(WithEnums::class),
+            ['backed' => 'a', 'pure' => 'b']
+        );
+        $this->assertEquals($expected, $r2);
     }
 
     /** @test */
@@ -31,49 +70,4 @@ final class ConstructorTest extends TestCase
         $r = (new Constructor())->resolve(new \ReflectionClass(Untyped::class), $data);
         $this->assertEquals(new Untyped('ab', 'bc'), $r);
     }
-
-    /** @test */
-    public function it_can_build_complex(): void
-    {
-        $data = [
-            'id' => 'id1',
-            'n' => 10,
-            'flag' => true,
-            'a1' => [1, 2, 3],
-            'a2' => [4, 5, 6],
-            'singleItem' => ['id' => 'single', 'title' => 't1'],
-            'items' => [
-                ['id' => 'multiple1', 'title' => 'm1'],
-                ['id' => 'multiple2', 'title' => 'm2'],
-                ['id' => 'multiple3', 'title' => 'm3'],
-            ]
-        ];
-        $r = (new Constructor())->resolve(new \ReflectionClass(Rich::class), $data);
-
-        $expected = new Rich(
-            'id1', 10, true, [1, 2, 3], [4, 5, 6],
-            new Item('single', 't1'),
-            new Item('multiple1', 'm1'),
-            new Item('multiple2', 'm2'),
-            new Item('multiple3', 'm3'),
-        );
-
-
-        $this->assertEquals($expected, $r);
-    }
-
-    /** @test */
-    public function it_can_resolve_enum_params(): void
-    {
-        $expected = new TestEnum(BackedEnum::a, PureEnum::b);
-        $r = (new Constructor())->resolve(new \ReflectionClass(TestEnum::class), ['backed' => 1, 'pure' => 'b']
-        );
-        $this->assertEquals($expected, $r);
-        $r2 = (new Constructor())->resolve(
-            new \ReflectionClass(TestEnum::class),
-            ['backed' => 'a', 'pure' => 'b']
-        );
-        $this->assertEquals($expected, $r2);
-    }
-
 }

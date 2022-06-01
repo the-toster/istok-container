@@ -9,7 +9,7 @@ use Istok\Container\ModelResolving\ModelResolver;
 use PHPUnit\Framework\TestCase;
 use Test\ModelResolver\Fixture\BackedEnum;
 use Test\ModelResolver\Fixture\PureEnum;
-use Test\ModelResolver\Fixture\TestEnum;
+use Test\ModelResolver\Fixture\WithEnums;
 
 final class ModelResolverTest extends TestCase
 {
@@ -17,6 +17,6 @@ final class ModelResolverTest extends TestCase
     public function it_can_resolve(): void
     {
         $resolver = new ModelResolver(['pure' => 'a', 'backed' => 'b']);
-        $this->assertEquals(new TestEnum(BackedEnum::b, PureEnum::a), $resolver->resolve(TestEnum::class));
+        $this->assertEquals(new WithEnums(BackedEnum::b, PureEnum::a), $resolver->resolve(WithEnums::class));
     }
 }
