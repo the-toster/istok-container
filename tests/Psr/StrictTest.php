@@ -9,7 +9,6 @@ use Istok\Container\Container;
 use Istok\Container\Psr\NotFound;
 use Istok\Container\Psr\StrictContainer;
 use PHPUnit\Framework\TestCase;
-use Test\Fixtures\PsrTestEntry;
 
 final class StrictTest extends TestCase
 {

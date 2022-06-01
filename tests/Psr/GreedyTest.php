@@ -9,7 +9,6 @@ use Istok\Container\Container;
 use Istok\Container\Psr\GreedyContainer;
 use Istok\Container\Psr\NotFound;
 use PHPUnit\Framework\TestCase;
-use Test\Fixtures\PsrTestEntry;
 
 final class GreedyTest extends TestCase
 {
