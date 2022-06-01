@@ -40,12 +40,14 @@ final class Container
         $entity = $this->items[$id] ?? $id;
 
         if ($entity instanceof Closure) {
+            /** @psalm-suppress MixedAssignment */
             $r = $this->call($entity);
             $this->cache->cacheIfShould($id, $r);
             return $r;
         }
 
-        if (is_string($entity) && class_exists($entity)) {
+        if (class_exists($entity)) {
+            /** @psalm-suppress MixedAssignment */
             $r = $this->build($entity);
             $this->cache->cacheIfShould($id, $r);
             return $r;
@@ -59,6 +61,7 @@ final class Container
         return array_key_exists($id, $this->items);
     }
 
+    /** @param class-string $id */
     private function build(string $id): mixed
     {
         $reflection = new ReflectionClass($id);
@@ -92,14 +95,16 @@ final class Container
      * @template T
      * @param class-string<T> $id
      * @return T
+     * @psalm-suppress MixedInferredReturnType
      */
     public function construct(string $id): object
     {
+        /** @psalm-suppress MixedAssignment */
         $instance = $this->make($id);
         if ($instance instanceof $id) {
             throw new NotResolvable('Resolved object not an instance of requested class');
         }
-
+        /** @psalm-suppress MixedReturnStatement */
         return $instance;
     }
 
@@ -114,6 +119,7 @@ final class Container
         foreach ($reflection->getParameters() as $parameter) {
             $name = $parameter->getName();
             if (array_key_exists($name, $arguments)) {
+                /** @psalm-suppress MixedAssignment */
                 $givenArguments[$name] = $arguments[$name];
                 continue;
             }

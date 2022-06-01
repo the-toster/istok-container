@@ -6,5 +6,6 @@ namespace Istok\Container;
 
 interface Resolver
 {
+    /** @param class-string $type */
     public function resolve(string $type, array $arguments): mixed;
 }

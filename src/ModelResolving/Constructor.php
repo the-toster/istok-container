@@ -9,9 +9,10 @@ use Istok\Container\NotResolvable;
 
 final class Constructor
 {
+    /** @param array<string,mixed> $input */
     public function resolve(\ReflectionClass $class, array $input): object
     {
-        $params = $class->getConstructor()->getParameters();
+        $params = $class->getConstructor()?->getParameters() ?? [];
         $args = [];
         $variadic = [];
         foreach ($params as $parameter) {
@@ -22,15 +23,16 @@ final class Constructor
                 continue;
             }
 
-            if($parameter->isVariadic()) {
+            /** @psalm-suppress MixedAssignment */
+            if ($parameter->isVariadic()) {
                 foreach ($input[$name] as $inputItem) {
                     $variadic[] = $this->resolveParameter($parameter, $inputItem);
                 }
             } else {
                 $args[$name] = $this->resolveParameter($parameter, $input[$name]);
             }
-
         }
+        /** @psalm-suppress InvalidStringClass */
         return new $class->name(...$args, ...$variadic);
     }
 
@@ -61,9 +63,14 @@ final class Constructor
         }
 
         if (class_exists($name)) {
+            if (!is_array($argument)) {
+                throw new \InvalidArgumentException('Expected array for resolving ' . $name);
+            }
+            /** @psalm-suppress MixedArgumentTypeCoercion */
             return $this->resolve(new \ReflectionClass($name), $argument);
         }
 
+        /** @psalm-suppress MixedOperand */
         throw new NotResolvable('Given type not supported: ' . $name);
     }
 
@@ -95,6 +102,7 @@ final class Constructor
         }
 
         if ($reflection->isBacked()) {
+            /** @var \ReflectionEnumBackedCase $enumCase */
             foreach ($reflection->getCases() as $enumCase) {
                 if ((string)$enumCase->getBackingValue() === $case) {
                     return $enumCase->getValue();
