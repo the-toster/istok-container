@@ -6,8 +6,6 @@ namespace Test;
 
 
 use Istok\Container\Container;
-use Istok\Container\NotResolvable;
-use Istok\Container\Psr\NotFound;
 use PHPUnit\Framework\TestCase;
 use Test\Fixtures\ClassA;
 use Test\Fixtures\ClassB;
@@ -17,40 +15,31 @@ use Test\Fixtures\TestResolver;
 final class CallTest extends TestCase
 {
     /** @test */
-    public function it_can_perform_simple_resolve(): void
+    public function it_can_call_with_given_arguments(): void
     {
         $container = new Container();
-        $r = $container->call(fn(ClassA $a) => $a);
-        $this->assertEquals(new ClassA(), $r);
+        $r = $container->call(fn(string $a) => $a, ['a' => 'test']);
+        $this->assertEquals('test', $r);
     }
 
     /** @test */
-    public function it_can_perform_complex_resolve(): void
+    public function it_can_resolve_by_container_and_arguments(): void
+    {
+        $container = new Container();
+        $r = $container->call(fn(string $a, ClassB $b) => [$a, $b], ['a' => 'test']);
+        $this->assertEquals(['test', new ClassB(new ClassA())], $r);
+    }
+
+
+    /** @test */
+    public function it_can_resolve_by_attribute(): void
     {
         $container = new Container();
 
-        $container->singleton(TestResolver::class, fn() => new TestResolver(['marker' => 'mark']));
+        $container->singleton(TestResolver::class, fn() => new TestResolver(['marker' => 'test']));
 
-        $r = $container->call(
-            fn(string $a, RequestDTO $dto, ClassA $classA, ClassB $classB, string $b = 'b') => [
-                'a' => $a,
-                'dto' => $dto,
-                'classA' => $classA,
-                'classB' => $classB,
-                'b' => $b,
-            ],
-            ['a' => 'a'],
-        );
+        $r = $container->call(fn(RequestDTO $dto) => $dto);
 
-        $this->assertEquals(
-            [
-                'a' => 'a',
-                'dto' => new RequestDTO('mark'),
-                'classA' => new ClassA(),
-                'classB' => new ClassB(new ClassA()),
-                'b' => 'b',
-            ],
-            $r
-        );
+        $this->assertEquals(new RequestDTO('test'), $r);
     }
 }
