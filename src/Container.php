@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace Istok\Container;
 
 use Closure;
-use Istok\Container\ContainerInterface as IstokContainer;
-use Psr\Container\ContainerInterface;
+use Istok\Container\Psr\NotFound;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
 
-final class Container implements ContainerInterface, IstokContainer
+final class Container
 {
     /** @var array<string,Closure|string> */
     private array $items = [];
@@ -27,37 +26,37 @@ final class Container implements ContainerInterface, IstokContainer
         $this->cache = new Cache();
     }
 
-
-    public function has(string $id): bool
+    public function make(string $id): mixed
     {
-        return isset($this->items[$id]);
-    }
-
-    public function get(string $id): mixed
-    {
-        if (!$this->has($id) && !class_exists($id)) {
-            throw new NotFound();
-        }
 
         if ($this->cache->has($id)) {
             return $this->cache->get($id);
+        }
+
+        if (!$this->has($id) && !class_exists($id)) {
+            throw new NotFound();
         }
 
         $entity = $this->items[$id] ?? $id;
 
         if ($entity instanceof Closure) {
             $r = $this->call($entity);
-            $this->cache->newVal($id, $r);
+            $this->cache->cacheIfShould($id, $r);
             return $r;
         }
 
         if (is_string($entity) && class_exists($entity)) {
             $r = $this->build($entity);
-            $this->cache->newVal($id, $r);
+            $this->cache->cacheIfShould($id, $r);
             return $r;
         }
 
         throw new NotResolvable($id);
+    }
+
+    public function has(string $id): bool
+    {
+        return array_key_exists($id, $this->items);
     }
 
     private function build(string $id): mixed
@@ -73,7 +72,7 @@ final class Container implements ContainerInterface, IstokContainer
             $resolverName = $resolverAttribute->getName();
             if ($this->has($resolverName)) {
                 /** @var Resolver $resolver */
-                $resolver = $this->get($resolverName);
+                $resolver = $this->make($resolverName);
                 return $resolver->resolve($id, $resolverAttribute->getArguments());
             }
         }
@@ -96,7 +95,7 @@ final class Container implements ContainerInterface, IstokContainer
      */
     public function construct(string $id): object
     {
-        $instance = $this->get($id);
+        $instance = $this->make($id);
         if ($instance instanceof $id) {
             throw new NotResolvable('Resolved object not an instance of requested class');
         }
@@ -146,7 +145,7 @@ final class Container implements ContainerInterface, IstokContainer
             $type = $parameter->getType();
             if ($type instanceof ReflectionNamedType) {
                 /** @psalm-suppress MixedAssignment */
-                $arguments[] = $this->get((string)$type);
+                $arguments[] = $this->make((string)$type);
                 continue;
             }
 

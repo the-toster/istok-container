@@ -6,9 +6,8 @@ namespace Test;
 
 
 use Istok\Container\Container;
-use Istok\Container\ModelResolving\StaticResolver;
-use Istok\Container\NotFound;
 use Istok\Container\NotResolvable;
+use Istok\Container\Psr\NotFound;
 use PHPUnit\Framework\TestCase;
 
 final class CallTest extends TestCase

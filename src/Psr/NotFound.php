@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Istok\Container;
+namespace Istok\Container\Psr;
 
 
 use Psr\Container\NotFoundExceptionInterface;

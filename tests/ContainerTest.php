@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Test;
 
 
-use PHPUnit\Framework\TestCase;
 use Istok\Container\Container;
-use Istok\Container\NotFound;
+use Istok\Container\Psr\NotFound;
+use PHPUnit\Framework\TestCase;
 
 final class ContainerTest extends TestCase
 {
@@ -18,7 +18,7 @@ final class ContainerTest extends TestCase
         $container->singleton('ABC', fn() => 'wer');
 
         $this->assertTrue($container->has('ABC'));
-        $this->assertEquals('wer', $container->get('ABC'));
+        $this->assertEquals('wer', $container->make('ABC'));
     }
 
     /** @test */
@@ -28,14 +28,14 @@ final class ContainerTest extends TestCase
         $container->singleton('ABC', fn(NotFound $example) => $example->getMessage());
         $container->singleton(NotFound::class, fn() => new NotFound('marker'));
 
-        $this->assertEquals('marker', $container->get('ABC'));
+        $this->assertEquals('marker', $container->make('ABC'));
     }
 
     /** @test */
     public function it_can_give_concrete(): void
     {
         $container = new Container();
-        $r = $container->get(NotFound::class);
+        $r = $container->make(NotFound::class);
 
         $this->assertEquals(new NotFound(), $r);
     }
@@ -46,6 +46,6 @@ final class ContainerTest extends TestCase
         $container = new Container();
         $container->argument('message', NotFound::class, fn() => 'marker');
 
-        $this->assertEquals(new NotFound('marker'), $container->get(NotFound::class));
+        $this->assertEquals(new NotFound('marker'), $container->make(NotFound::class));
     }
 }

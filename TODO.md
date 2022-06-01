@@ -1,2 +1,2 @@
 - [ ] clean & expressive tests
-- [ ] check resolving order
+- [ ] exceptions
