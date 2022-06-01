@@ -9,6 +9,10 @@ use Istok\Container\Container;
 use Istok\Container\NotResolvable;
 use Istok\Container\Psr\NotFound;
 use PHPUnit\Framework\TestCase;
+use Test\Fixtures\ClassA;
+use Test\Fixtures\ClassB;
+use Test\Fixtures\RequestDTO;
+use Test\Fixtures\TestResolver;
 
 final class CallTest extends TestCase
 {
@@ -16,8 +20,8 @@ final class CallTest extends TestCase
     public function it_can_perform_simple_resolve(): void
     {
         $container = new Container();
-        $r = $container->call(fn(NotFound $a) => $a);
-        $this->assertEquals(new NotFound(), $r);
+        $r = $container->call(fn(ClassA $a) => $a);
+        $this->assertEquals(new ClassA(), $r);
     }
 
     /** @test */
@@ -25,16 +29,28 @@ final class CallTest extends TestCase
     {
         $container = new Container();
 
+        $container->singleton(TestResolver::class, fn() => new TestResolver(['marker' => 'mark']));
+
         $r = $container->call(
-            fn(string $a, NotFound $notFound, NotResolvable $notResolvable, string $b = 'b') => [
+            fn(string $a, RequestDTO $dto, ClassA $classA, ClassB $classB, string $b = 'b') => [
                 'a' => $a,
+                'dto' => $dto,
+                'classA' => $classA,
+                'classB' => $classB,
                 'b' => $b,
-                'e1' => $notFound,
-                'e2' => $notResolvable
             ],
             ['a' => 'a'],
         );
 
-        $this->assertEquals(['a' => 'a', 'b' => 'b', 'e1' => new NotFound('marker'), 'e2' => new NotResolvable()], $r);
+        $this->assertEquals(
+            [
+                'a' => 'a',
+                'dto' => new RequestDTO('mark'),
+                'classA' => new ClassA(),
+                'classB' => new ClassB(new ClassA()),
+                'b' => 'b',
+            ],
+            $r
+        );
     }
 }

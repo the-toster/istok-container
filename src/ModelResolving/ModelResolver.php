@@ -7,13 +7,15 @@ namespace Istok\Container\ModelResolving;
 
 use Istok\Container\Resolver;
 
-final class ModelResolver implements Resolver
+class ModelResolver implements Resolver
 {
+    /** @param array<string,mixed> $data */
     public function __construct(
-        private readonly array $data
+        private readonly array $data = []
     ) {
     }
 
+    /** @param class-string $type */
     public function resolve(string $type, array $arguments = []): mixed
     {
         $class = new \ReflectionClass($type);
