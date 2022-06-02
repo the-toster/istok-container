@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Istok\Container\ModelResolving;
 
 
-use Istok\Container\NotResolvable;
-
 final class Constructor
 {
     /** @param array<string,mixed> $input */
@@ -23,13 +21,17 @@ final class Constructor
                 continue;
             }
 
-            /** @psalm-suppress MixedAssignment */
-            if ($parameter->isVariadic()) {
-                foreach ($input[$name] as $inputItem) {
-                    $variadic[] = $this->resolveParameter($parameter, $inputItem);
+            try {
+                /** @psalm-suppress MixedAssignment */
+                if ($parameter->isVariadic()) {
+                    foreach ($input[$name] as $inputItem) {
+                        $variadic[] = $this->resolveParameter($parameter, $inputItem);
+                    }
+                } else {
+                    $args[$name] = $this->resolveParameter($parameter, $input[$name]);
                 }
-            } else {
-                $args[$name] = $this->resolveParameter($parameter, $input[$name]);
+            } catch (\Throwable $e) {
+                throw ModelResolutionException::for($class->name, $name, $e);
             }
         }
         /** @psalm-suppress InvalidStringClass */
@@ -45,7 +47,7 @@ final class Constructor
         }
 
         if (!($type instanceof \ReflectionNamedType)) {
-            throw new NotResolvable('Intersection and union types are not supported');
+            throw ParameterResolutionException::nonNamedType($type);
         }
 
         return $this->resolveNamedType($type, $input);
@@ -64,14 +66,14 @@ final class Constructor
 
         if (class_exists($name)) {
             if (!is_array($argument)) {
-                throw new \InvalidArgumentException('Expected array for resolving ' . $name);
+                throw ParameterResolutionException::missedArgumentsArray();
             }
             /** @psalm-suppress MixedArgumentTypeCoercion */
             return $this->resolve(new \ReflectionClass($name), $argument);
         }
 
-        /** @psalm-suppress MixedOperand */
-        throw new NotResolvable('Given type not supported: ' . $name);
+        /** @psalm-suppress MixedArgument */
+        throw ParameterResolutionException::unsupportedParameterType($name);
     }
 
     private function coerce(\ReflectionNamedType $to, mixed $v): mixed
@@ -89,8 +91,8 @@ final class Constructor
 
     private function resolveEnum(string $typeName, mixed $argument): mixed
     {
-        if (!is_scalar($argument)) {
-            throw new NotResolvable('Can\'t resolve enum from non-scalar value');
+        if (!is_string($argument) && !is_int($argument)) {
+            throw ParameterResolutionException::invalidEnumValueType($argument);
         }
 
         $case = (string)$argument;
@@ -110,7 +112,7 @@ final class Constructor
             }
         }
 
-        throw new NotResolvable("Enum doesn't contain such case");
+        throw ParameterResolutionException::noSuchCase($case);
     }
 
 }

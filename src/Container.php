@@ -28,13 +28,12 @@ final class Container
 
     public function make(string $id): mixed
     {
-
         if ($this->cache->has($id)) {
             return $this->cache->get($id);
         }
 
         if (!$this->has($id) && !class_exists($id)) {
-            throw new NotFound();
+            throw ResolutionException::unknownEntry($id);
         }
 
         $entity = $this->items[$id] ?? $id;
@@ -53,7 +52,7 @@ final class Container
             return $r;
         }
 
-        throw new NotResolvable($id);
+        throw new \LogicException();
     }
 
     public function has(string $id): bool
@@ -82,7 +81,7 @@ final class Container
 
         $constructor = $reflection->getConstructor();
         if ($constructor && !$constructor->isPublic()) {
-            throw new NotResolvable();
+            throw ResolutionException::nonPublicConstructor($id);
         }
 
         $args = $this->resolveArguments($constructor?->getParameters() ?? [], $id);
@@ -99,11 +98,16 @@ final class Container
      */
     public function construct(string $id): object
     {
+        if (!class_exists($id) && !interface_exists($id)) {
+            throw TypeCheckError::requestedUnknown($id);
+        }
+
         /** @psalm-suppress MixedAssignment */
         $instance = $this->make($id);
-        if ($instance instanceof $id) {
-            throw new NotResolvable('Resolved object not an instance of requested class');
+        if (!($instance instanceof $id)) {
+            throw TypeCheckError::resolvedNonInstance($instance, $id);
         }
+
         /** @psalm-suppress MixedReturnStatement */
         return $instance;
     }
@@ -155,7 +159,7 @@ final class Container
                 continue;
             }
 
-            throw new NotResolvable();
+            throw ResolutionException::unknownParameter($parameter->getName(), $forId);
         }
 
         return $arguments;

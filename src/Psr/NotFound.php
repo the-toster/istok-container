@@ -9,5 +9,8 @@ use Psr\Container\NotFoundExceptionInterface;
 
 final class NotFound extends \InvalidArgumentException implements NotFoundExceptionInterface
 {
-
+    public function __construct(public readonly string $id)
+    {
+        parent::__construct();
+    }
 }

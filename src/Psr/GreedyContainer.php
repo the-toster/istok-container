@@ -6,7 +6,7 @@ namespace Istok\Container\Psr;
 
 
 use Istok\Container\Container;
-use Istok\Container\NotResolvable;
+use Istok\Container\ResolutionException;
 use Psr\Container\ContainerInterface;
 
 final class GreedyContainer implements ContainerInterface
@@ -19,7 +19,7 @@ final class GreedyContainer implements ContainerInterface
     public function get(string $id): mixed
     {
         if (!$this->has($id)) {
-            throw new NotFound();
+            throw new NotFound($id);
         }
 
         return $this->container->make($id);
@@ -29,7 +29,7 @@ final class GreedyContainer implements ContainerInterface
     {
         try {
             $this->container->make($id);
-        } catch (NotResolvable|NotFound) {
+        } catch (ResolutionException) {
             return false;
         }
         return true;

@@ -18,7 +18,7 @@ final class StrictContainer implements ContainerInterface
     public function get(string $id): mixed
     {
         if (!$this->has($id)) {
-            throw new NotFound();
+            throw new NotFound($id);
         }
 
         return $this->container->make($id);

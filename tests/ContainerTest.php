@@ -6,8 +6,10 @@ namespace Test;
 
 
 use Istok\Container\Container;
+use Istok\Container\TypeCheckError;
 use PHPUnit\Framework\TestCase;
 use Test\Fixtures\ClassA;
+use Test\Fixtures\ClassB;
 use Test\Fixtures\WithMarker;
 
 final class ContainerTest extends TestCase
@@ -73,5 +75,31 @@ final class ContainerTest extends TestCase
         $container->argument('marker', WithMarker::class, fn() => 'bound arg');
 
         $this->assertEquals(new WithMarker('bound arg'), $container->make(WithMarker::class));
+    }
+
+    /** @test */
+    public function it_can_resolve_with_type_check(): void
+    {
+        $containter = new Container();
+        $instance = $containter->construct(ClassA::class);
+        $this->assertInstanceOf(ClassA::class, $instance);
+    }
+
+    /** @test */
+    public function it_perform_type_check_of_resolved_instance(): void
+    {
+        $containter = new Container();
+        $containter->singleton(ClassB::class, ClassA::class);
+        $this->expectExceptionMessage(TypeCheckError::resolvedNonInstance(new ClassA(), ClassB::class)->getMessage());
+        $containter->construct(ClassB::class);
+    }
+
+    /** @test */
+    public function it_perform_type_check_of_requested_type(): void
+    {
+        $containter = new Container();
+        $nonTypeIdentifier = 'nonTypeIdentifier';
+        $this->expectExceptionMessage(TypeCheckError::requestedUnknown($nonTypeIdentifier)->getMessage());
+        $containter->construct($nonTypeIdentifier);
     }
 }

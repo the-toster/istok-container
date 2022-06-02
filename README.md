@@ -7,7 +7,7 @@ composer require istok/container
 - contain handy `Container::call(\Closure $fn): mixed` method
 - allow custom resolving by attributes (useful to fill DTO)
 - allow param-name binding: `Container::bindArgument(string $name, string $for, \Closure $resolver)`
-- implements PSR-11
+- provided with wrapper implementing PSR-11
 
 ## Registration
 ```php
@@ -17,12 +17,12 @@ Container::singletone(string $id, string|\Closure $defitition);
 Container::register(string $id, string|\Closure $defitition);
 
 // parameter $name of $for::__construct() will be resolved by given closure 
-Container::bindArgument(string $name, string $for, \Closure $resolver);
+Container::argument(string $name, string $for, \Closure $resolver);
 ```
 ## Retrieving
 ```php
 // take instance
-Container::get(string $id);
+Container::make(string $id);
 
 /**
  * Call $fn with given arguments, using Container::get() for rest
