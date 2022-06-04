@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Istok\Container;
 
 use Closure;
-use Istok\Container\Psr\NotFound;
+use Istok\Container\ModelResolving\ResolveBy;
+use Istok\Container\ModelResolving\Resolver;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionNamedType;
@@ -67,16 +68,14 @@ final class Container
 
         foreach (
             $reflection->getAttributes(
-                Resolver::class,
+                ResolveBy::class,
                 \ReflectionAttribute::IS_INSTANCEOF
             ) as $resolverAttribute
         ) {
-            $resolverName = $resolverAttribute->getName();
-            if ($this->has($resolverName)) {
-                /** @var Resolver $resolver */
-                $resolver = $this->make($resolverName);
-                return $resolver->resolve($id, $resolverAttribute->getArguments());
-            }
+            $resolveBy = $resolverAttribute->newInstance();
+            /** @var Resolver $resolver */
+            $resolver = $this->make($resolveBy->resolverName);
+            return $resolver->resolve($id, $resolveBy->key);
         }
 
         $constructor = $reflection->getConstructor();

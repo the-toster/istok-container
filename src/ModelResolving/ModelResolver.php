@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Istok\Container\ModelResolving;
 
 
-use Istok\Container\Resolver;
-
 class ModelResolver implements Resolver
 {
     /** @param array<string,mixed> $data */
@@ -16,7 +14,7 @@ class ModelResolver implements Resolver
     }
 
     /** @param class-string $type */
-    public function resolve(string $type, array $arguments = []): mixed
+    public function resolve(string $type, string $key): mixed
     {
         $class = new \ReflectionClass($type);
         return (new Constructor())->resolve($class, $this->data);

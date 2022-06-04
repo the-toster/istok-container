@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Test\Fixtures;
 
-#[TestResolver]
+use Istok\Container\ModelResolving\ResolveBy;
+
+#[ResolveBy(TestResolver::class)]
 final class WithAttribute
 {
     public function __construct(
