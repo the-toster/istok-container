@@ -10,6 +10,7 @@ use Istok\Container\Psr\NotFound;
 use Istok\Container\Psr\StrictContainer;
 use PHPUnit\Framework\TestCase;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 final class StrictTest extends TestCase
 {
     /** @test */

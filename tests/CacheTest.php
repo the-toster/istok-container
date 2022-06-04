@@ -8,6 +8,7 @@ namespace Test;
 use Istok\Container\Cache;
 use PHPUnit\Framework\TestCase;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 final class CacheTest extends TestCase
 {
     /** @test */

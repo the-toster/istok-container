@@ -12,9 +12,13 @@ use Test\Fixtures\ClassA;
 use Test\Fixtures\ClassB;
 use Test\Fixtures\WithMarker;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 final class ContainerTest extends TestCase
 {
-    /** @test */
+    /**
+     * @test
+     * @psalm-suppress MixedAssignment
+     */
     public function it_can_give_non_shared_instances(): void
     {
         $container = new Container();
@@ -26,7 +30,10 @@ final class ContainerTest extends TestCase
         $this->assertFalse($i1 === $i2); // but not the same
     }
 
-    /** @test */
+    /**
+     * @test
+     * @psalm-suppress MixedAssignment
+     */
     public function it_can_give_shared_instances(): void
     {
         $container = new Container();
@@ -59,7 +66,10 @@ final class ContainerTest extends TestCase
         $this->assertEquals('definition-param', $container->make('ABC'));
     }
 
-    /** @test */
+    /**
+     * @test
+     * @psalm-suppress MixedAssignment
+     */
     public function it_can_resolve_concrete_class_without_registration(): void
     {
         $container = new Container();
@@ -100,6 +110,7 @@ final class ContainerTest extends TestCase
         $containter = new Container();
         $nonTypeIdentifier = 'nonTypeIdentifier';
         $this->expectExceptionMessage(TypeCheckError::requestedUnknown($nonTypeIdentifier)->getMessage());
+        /** @psalm-suppress ArgumentTypeCoercion */
         $containter->construct($nonTypeIdentifier);
     }
 }

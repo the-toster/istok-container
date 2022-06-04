@@ -10,6 +10,7 @@ use Istok\Container\Psr\GreedyContainer;
 use Istok\Container\Psr\NotFound;
 use PHPUnit\Framework\TestCase;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 final class GreedyTest extends TestCase
 {
     /** @test */

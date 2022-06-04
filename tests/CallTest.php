@@ -12,12 +12,14 @@ use Test\Fixtures\ClassB;
 use Test\Fixtures\WithAttribute;
 use Test\Fixtures\TestResolver;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 final class CallTest extends TestCase
 {
     /** @test */
     public function it_can_call_with_given_arguments(): void
     {
         $container = new Container();
+        /** @psalm-suppress MixedAssignment */
         $r = $container->call(fn(string $a) => $a, ['a' => 'test']);
         $this->assertEquals('test', $r);
     }
@@ -26,6 +28,7 @@ final class CallTest extends TestCase
     public function it_can_resolve_by_container_and_arguments(): void
     {
         $container = new Container();
+        /** @psalm-suppress MixedAssignment */
         $r = $container->call(fn(string $a, ClassB $b) => [$a, $b], ['a' => 'test']);
         $this->assertEquals(['test', new ClassB(new ClassA())], $r);
     }
@@ -37,7 +40,7 @@ final class CallTest extends TestCase
         $container = new Container();
 
         $container->singleton(TestResolver::class, fn() => new TestResolver(['marker' => 'test']));
-
+        /** @psalm-suppress MixedAssignment */
         $r = $container->call(fn(WithAttribute $dto) => $dto);
 
         $this->assertEquals(new WithAttribute('test'), $r);

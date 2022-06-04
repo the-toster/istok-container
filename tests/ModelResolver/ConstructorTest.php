@@ -16,6 +16,7 @@ use Test\ModelResolver\Fixture\WithEnums;
 use Test\ModelResolver\Fixture\Untyped;
 use Test\ModelResolver\Fixture\WithVariadic;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 final class ConstructorTest extends TestCase
 {
     /** @test */
